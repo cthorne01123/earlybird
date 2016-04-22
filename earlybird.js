@@ -98,7 +98,7 @@ function numberWithSign(n) {
 }
 
 function utcOffsetStr(n) {
-  return ((n>=0)?"+":"") + (n<10?"0":"") + n + "00";
+  return ((n>=0)?"+":"-") + (((n<0&&n>-10)||(n>=0&&n<10))?"0":"") + Math.abs(n) + "00";
 }
 
 function botSay(message, messageText) {
@@ -114,13 +114,13 @@ function botSay(message, messageText) {
   }
 }
 
-// Saves are not immediate; need to be careful data that isn't saved isn't overwritten
-var pending_user_data = {};
+// Saves are not immediate; need to be careful data that isn't saved isn't overwritten by old reads
+var current_user_data = {};
 
 function addOrReplaceStorage(message, new_data) {
   console.log("addOrReplaceStorage: " + message.user);
 
-  var handler = function(err, user_data) {
+  var handler = function(err, user_data) {	
     if (user_data == undefined) {
       console.log("addOrReplaceStorage: new user_data");
       user_data = {id: message.user};
@@ -139,18 +139,20 @@ function addOrReplaceStorage(message, new_data) {
     console.log("Saving");
     console.log(user_data);
 
-    pending_user_data[message.user] = user_data;
+    current_user_data[message.user] = user_data;
 
     controller.storage.users.save(user_data, function(err) {
       console.log("addOrReplaceStorage err: " + err);
-      pending_user_data[message.user] = undefined;
     });
   };
 
-  if (pending_user_data[message.user])
-    handler(null, pending_user_data[message.user]);
-  else
-    controller.storage.users.get(message.user, handler);
+  controller.storage.users.get(message.user, function(err, user_data) {
+    // if local data appears during a read, use that instead
+    if (current_user_data[message.user])
+      handler(null, current_user_data[message.user]);
+    else
+      handler(err, user_data);	
+  });   
 }
 
 function saveTimeZone(message, zoneOffset, silentSet) {
