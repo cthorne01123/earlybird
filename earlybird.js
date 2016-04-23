@@ -3,7 +3,6 @@
 /////////////////////////////
 
 var SLACK_BOT = process.env.slackbot ? true : false;
-var SLACK_CHANNEL = process.env.slackchannel;
 var DEFAULT_TIME_ZONE_OFFSET = process.env.slackdefaultoffset; // Offset from UTC
 
 console.log("SLACK_BOT: " + SLACK_BOT);
@@ -13,7 +12,7 @@ var CHECK1_SECONDS = 60;
 var CHECK2_SECONDS = 240;
 
 // Name of message event to listen for
-var messageListenEvent = SLACK_BOT ? 'ambient' : 'message_received';
+var messageListenEvent = SLACK_BOT ? 'ambient,direct_message,direct_mention' : 'message_received';
 
 // Comments to greet users in the morning
 var comments = [
@@ -102,19 +101,10 @@ function utcOffsetStr(n) {
 }
 
 function botSay(message, messageText) {
-  if (SLACK_BOT) {
-    bot.say(
-      {
-	text: messageText,
-	channel: SLACK_CHANNEL
-      }
-    );
-  } else {
-    bot.reply(message, messageText);
-  }
+  bot.reply(message, messageText);
 }
 
-// Saves are not immediate; need to be careful data that isn't saved isn't overwritten by old reads
+// Saves are not immediate; need to be careful data that isn't saved isn't overwritten by slow reads
 var current_user_data = {};
 
 function addOrReplaceStorage(message, new_data) {

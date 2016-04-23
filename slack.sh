@@ -1,1 +1,1 @@
-slackbot=1 slackchannel="<channelID>" slackdefaultoffset=1 node earlybird.js
+slackbot=1 slackdefaultoffset=1 node earlybird.js
