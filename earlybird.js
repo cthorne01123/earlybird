@@ -51,7 +51,7 @@ if (SLACK_BOT) {
     json_file_store: "userdata-slack"
   });
   bot = controller.spawn({
-    token: "xoxb-36552499799-fBePq3wH0uEier2AcV1jLQZH",
+    token: process.env.slack_token
   })
   bot.startRTM(function(err,bot,payload) {
     if (err) {
