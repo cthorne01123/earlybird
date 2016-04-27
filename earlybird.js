@@ -176,16 +176,19 @@ function calcUserZone(message, callback, errorRecall) {
 
 	// 12 - 10: 0
 
+	// 1 - 23: -22
+	// 17:11 - 00:11: 17
+	  
 	var d = uh-nh;
 	console.log(nh, uh, d);
 	if (d > 12 || d < -14)
-	  d = (nh>uh) ? (24-nh)+uh : (24-uh)+nh;
+	  d = (nh>uh) ? (24-nh)+uh : -(24-uh)+nh;
 	
 	// These signs seem to be backwards for moment?
 	//var zone = "Etc/GMT" + ((d>=0)?"+":"-") + d;
 	var zoneStr = "UTC" + numberWithSign(d);
 	var zoneOffset = d;
-	
+	  
 	//convo.say("Ok, it looks like your timezone is " + zoneStr + " and it's currently " + now.utcOffset(zoneOffset).format("HH:mm") + ". (Type zone again if you want to change this)");
 	
 	saveTimeZone(message, zoneOffset, true);
@@ -372,12 +375,13 @@ controller.hears('^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$|^([0-9]|0[0-9]|1[0-9
 	fmt = "HH:mm ZZ";
 
       // Read time using format
+
       alarm = moment(message.match[0] + " " + utcOffsetStr(zoneOffset), fmt);
 
       // Get time for timezone
       //alarm = moment.tz(alarm.format("HH:mm"), "HH:mm", "UTC");
 
-      if (alarm < now)
+      while (alarm < now)
         alarm.add(1, 'days');
     }
 
