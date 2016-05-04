@@ -3,7 +3,12 @@
 /////////////////////////////
 
 var SLACK_BOT = process.env.slackbot ? true : false;
-var DEFAULT_TIME_ZONE_OFFSET = process.env.slackdefaultoffset; // Offset from UTC
+var DEFAULT_TIME_ZONE_OFFSET; // Offset from UTC
+if (process.env.slackdefaultoffset) {
+  DEFAULT_TIME_ZONE_OFFSET = parseInt(process.env.slackdefaultoffset);
+} else {
+  DEFAULT_TIME_ZONE_OFFSET = 0;
+}
 
 console.log("SLACK_BOT: " + SLACK_BOT);
 
@@ -101,7 +106,12 @@ function utcOffsetStr(n) {
 }
 
 function botSay(message, messageText) {
-  bot.reply(message, messageText);
+  console.log("botSay");
+  bot.reply(message, messageText, function(err, response) {
+    console.log("botSay callback");
+    console.log(err);
+    console.log(response);
+  });
 }
 
 // Saves are not immediate; need to be careful data that isn't saved isn't overwritten by slow reads
@@ -218,7 +228,9 @@ function readUserZone(message, callback) {
 
 function readUserName(userId, callback) {
   if (SLACK_BOT) {
+    console.log("readUserName: " + userId);    
     bot.api.users.list({}, function(err,response) {
+      console.log(err,response);
       for (var i = 0; i < response.members.length; i++) {
 	var member = response.members[i];
 	if (member.id == userId)
@@ -260,6 +272,11 @@ function awakeCheck2(userId, userName, message) {
 }
 
 function wakeUpUser(userId, userName, message) {
+  console.log("wakeUpUser");
+  console.log(userId);
+  console.log(userName);
+  console.log(message);
+  
   var greetingMessage = SLACK_BOT ? "Good morning, @" + userName + "!" : "Good morning!";
   botSay(message, greetingMessage + "\n" + getRandomComment() + "\nAre you awake?");
   
