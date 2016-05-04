@@ -26,13 +26,13 @@ var comments = [
 
 if (!SLACK_BOT) {
   if (!process.env.page_token) {
-      console.log('Error: Specify page_token in environment');
-      process.exit(1);
+    console.log('Error: Specify page_token in environment');
+    process.exit(1);
   }
 
   if (!process.env.verify_token) {
-      console.log('Error: Specify verify_token in environment');
-      process.exit(1);
+    console.log('Error: Specify verify_token in environment');
+    process.exit(1);
   }
 }
 
@@ -178,7 +178,7 @@ function calcUserZone(message, callback, errorRecall) {
 
 	// 1 - 23: -22
 	// 17:11 - 00:11: 17
-	  
+	
 	var d = uh-nh;
 	console.log(nh, uh, d);
 	if (d > 12 || d < -14)
@@ -188,7 +188,7 @@ function calcUserZone(message, callback, errorRecall) {
 	//var zone = "Etc/GMT" + ((d>=0)?"+":"-") + d;
 	var zoneStr = "UTC" + numberWithSign(d);
 	var zoneOffset = d;
-	  
+	
 	//convo.say("Ok, it looks like your timezone is " + zoneStr + " and it's currently " + now.utcOffset(zoneOffset).format("HH:mm") + ". (Type zone again if you want to change this)");
 	
 	saveTimeZone(message, zoneOffset, true);
@@ -262,7 +262,7 @@ function awakeCheck2(userId, userName, message) {
 function wakeUpUser(userId, userName, message) {
   var greetingMessage = SLACK_BOT ? "Good morning, @" + userName + "!" : "Good morning!";
   botSay(message, greetingMessage + "\n" + getRandomComment() + "\nAre you awake?");
- 
+  
   var check1 = moment().add(CHECK1_SECONDS, 'seconds');
 
   // create new job
@@ -299,7 +299,7 @@ controller.on(messageListenEvent, function(bot, message) {
 });
 
 controller.hears(['hi', 'hey', 'hello'],messageListenEvent,function(bot,message) {
-bot.reply(message, "Hi :) Tell me what time you want to wake up (e.g. 07:00) and I'll message you at that time to see if you're awake!\n (Type help if you get stuck)");
+  bot.reply(message, "Hi :) Tell me what time you want to wake up (e.g. 07:00) and I'll message you at that time to see if you're awake!\n (Type help if you get stuck)");
 });
 
 controller.hears('^help$',messageListenEvent,function(bot,message) {
@@ -307,11 +307,11 @@ controller.hears('^help$',messageListenEvent,function(bot,message) {
 
   bot.reply(message, "Tell me what time you want to wake up (e.g. 07:00) and I'll message you at that time to see if you're awake!\nType help2 for more help.");
   /*bot.reply(message, "Hello, I'm Early Bird! I can help you wake up early in the morning.");
-  bot.reply(message, "Here's a list of my commands:");
-  bot.reply(message, "*<time>*: tell me the time you want to wake up tomorrow morning, e.g. 07:00 or 7");
-  bot.reply(message, "*forget*: tell me to forget the time you want to wake up tomorrow morning");
-  bot.reply(message, "*zone <timezone string>*: tell me your timezone, e.g. zone Europe/London (default Asia/Tokyo)");
-  bot.reply(message, "*zone*: ask me your current timezone");*/
+    bot.reply(message, "Here's a list of my commands:");
+    bot.reply(message, "*<time>*: tell me the time you want to wake up tomorrow morning, e.g. 07:00 or 7");
+    bot.reply(message, "*forget*: tell me to forget the time you want to wake up tomorrow morning");
+    bot.reply(message, "*zone <timezone string>*: tell me your timezone, e.g. zone Europe/London (default Asia/Tokyo)");
+    bot.reply(message, "*zone*: ask me your current timezone");*/
 });
 
 controller.hears('help2',messageListenEvent,function(bot,message) {
@@ -328,16 +328,16 @@ controller.hears('^zone',messageListenEvent,function(bot,message) {
   });
 
   /*readUserZone(message, function(zoneOffset, setAfterQuestion) {
-    //if (setAfterQuestion)
-    //  bot.reply(message, "Ok, I set your timezone to UTC" + numberWithSign(zoneOffset));
-    //else
-      //bot.reply(message, "Your timezone is set to UTC" + numberWithSign(zoneOffset) + " and it's currently " + moment().utcOffset(zoneOffset).format("HH:mm") + ". (Type zone again if you want to change this)");
+  //if (setAfterQuestion)
+  //  bot.reply(message, "Ok, I set your timezone to UTC" + numberWithSign(zoneOffset));
+  //else
+  //bot.reply(message, "Your timezone is set to UTC" + numberWithSign(zoneOffset) + " and it's currently " + moment().utcOffset(zoneOffset).format("HH:mm") + ". (Type zone again if you want to change this)");
   });*/
 });
 
 /*controller.hears('zone (.+)',messageListenEvent,function(bot,message) {
   saveTimeZone(message, message.match[1]);
-});*/
+  });*/
 
 controller.hears('^forget$',messageListenEvent,function(bot,message) {
   var userId = message.user;
