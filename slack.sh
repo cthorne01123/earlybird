@@ -1,1 +1,1 @@
-slackbot=1 slacktoken="" slackdefaultoffset=1 node earlybird.js
+slackbot=1 slack_token="" slackdefaultoffset=1 node earlybird.js
