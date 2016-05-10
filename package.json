@@ -1,0 +1,25 @@
+{
+  "name": "earlybird",
+  "version": "1.0.0",
+  "description": "A bot to help you wake up early.",
+  "main": "earlybird.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/cthorne01123/earlybird.git"
+  },
+  "author": "Christopher Thorne",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/cthorne01123/earlybird/issues"
+  },
+  "homepage": "https://github.com/cthorne01123/earlybird#readme",
+  "dependencies": {
+    "botkit": "^0.1.1",
+    "cron": "^1.1.0",
+    "curl": "^0.1.4",
+    "moment": "^2.13.0"
+  }
+}
