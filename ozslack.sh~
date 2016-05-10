@@ -1,0 +1,4 @@
+# Spawn a child process:
+(slack=1 slack_token="xoxb-36552499799-rhNhOCDCnDHIRHHkedZL3Sau" slack_default_offset=9 node earlybird.js) & pid=$!
+# in the background, sleep for 10 secs then kill that process
+sleep 5 && kill -9 $pid

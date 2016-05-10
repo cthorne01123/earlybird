@@ -2,10 +2,10 @@
 // Slack specific settings //
 /////////////////////////////
 
-var SLACK_BOT = process.env.slackbot ? true : false;
+var SLACK_BOT = process.env.slack ? true : false;
 var DEFAULT_TIME_ZONE_OFFSET; // Offset from UTC
-if (process.env.slackdefaultoffset) {
-  DEFAULT_TIME_ZONE_OFFSET = parseInt(process.env.slackdefaultoffset);
+if (process.env.slack_default_offset) {
+  DEFAULT_TIME_ZONE_OFFSET = parseInt(process.env.slack_default_offset);
 } else {
   DEFAULT_TIME_ZONE_OFFSET = 0;
 }
@@ -53,8 +53,12 @@ var bot;
 
 if (SLACK_BOT) {
   controller = Botkit.slackbot({
-    json_file_store: "userdata-slack"
+    json_file_store: "userdata-slack",
+    retry: true, // attempt to reconnect on timeout
+    debug: true
   });
+
+  console.log("Creating bot...");
   bot = controller.spawn({
     token: process.env.slack_token
   })
@@ -91,11 +95,6 @@ if (SLACK_BOT) {
 
 var userJobs = {}; // cron jobs for user alarms
 var awakeCheckUsers = {}; // users that we are waiting for a response from
-
-// http://stackoverflow.com/a/29170326/5402565
-function toDateWithTZ(m) {
-  return new Date(m.format('YYYY-MM-DD HH:mm'));
-}
 
 function numberWithSign(n) {
   return ((n>=0)?"+":"") + n;
@@ -230,7 +229,12 @@ function readUserName(userId, callback) {
   if (SLACK_BOT) {
     console.log("readUserName: " + userId);    
     bot.api.users.list({}, function(err,response) {
-      console.log(err,response);
+      if (err) {
+	console.log("error reading username");
+	callback(null);
+	return;
+      }
+
       for (var i = 0; i < response.members.length; i++) {
 	var member = response.members[i];
 	if (member.id == userId)
@@ -323,12 +327,6 @@ controller.hears('^help$',messageListenEvent,function(bot,message) {
   console.log(message);
 
   bot.reply(message, "Tell me what time you want to wake up (e.g. 07:00) and I'll message you at that time to see if you're awake!\nType help2 for more help.");
-  /*bot.reply(message, "Hello, I'm Early Bird! I can help you wake up early in the morning.");
-    bot.reply(message, "Here's a list of my commands:");
-    bot.reply(message, "*<time>*: tell me the time you want to wake up tomorrow morning, e.g. 07:00 or 7");
-    bot.reply(message, "*forget*: tell me to forget the time you want to wake up tomorrow morning");
-    bot.reply(message, "*zone <timezone string>*: tell me your timezone, e.g. zone Europe/London (default Asia/Tokyo)");
-    bot.reply(message, "*zone*: ask me your current timezone");*/
 });
 
 controller.hears('help2',messageListenEvent,function(bot,message) {
@@ -343,18 +341,7 @@ controller.hears('^zone',messageListenEvent,function(bot,message) {
   calcUserZone(message, function(zoneOffset, setMessageText) {
     bot.reply(message, setMessageText);
   });
-
-  /*readUserZone(message, function(zoneOffset, setAfterQuestion) {
-  //if (setAfterQuestion)
-  //  bot.reply(message, "Ok, I set your timezone to UTC" + numberWithSign(zoneOffset));
-  //else
-  //bot.reply(message, "Your timezone is set to UTC" + numberWithSign(zoneOffset) + " and it's currently " + moment().utcOffset(zoneOffset).format("HH:mm") + ". (Type zone again if you want to change this)");
-  });*/
 });
-
-/*controller.hears('zone (.+)',messageListenEvent,function(bot,message) {
-  saveTimeZone(message, message.match[1]);
-  });*/
 
 controller.hears('^forget$',messageListenEvent,function(bot,message) {
   var userId = message.user;
@@ -407,15 +394,6 @@ controller.hears('^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$|^([0-9]|0[0-9]|1[0-9
     else
       bot.reply(message, "Ok, see you at " + alarm.utcOffset(zoneOffset).format('HH:mm') + " :D!");
 
-    // check if user already has a job running
-    var activeJob = userJobs[userId];
-    if (activeJob) {
-      console.log("cancelling job first...");
-      activeJob.stop();
-    } else {
-      console.log("no job active to stop");
-    }
-
     // create new job
     startWakeUpJob(message, alarm.toDate());
 
@@ -428,6 +406,15 @@ controller.hears('^([0-9]|0[0-9]|1[0-9]|2[0-3]):[0-5][0-9]$|^([0-9]|0[0-9]|1[0-9
 
 function startWakeUpJob(message, date) {
   var userId = message.user;
+
+  // check if user already has a job running
+  var activeJob = userJobs[userId];
+  if (activeJob) {
+    console.log("cancelling job first...");
+    activeJob.stop();
+  } else {
+    console.log("no job active to stop");
+  }
   
   // create new job
   var job = new CronJob(date, function() {
@@ -462,7 +449,7 @@ function startUp() {
 	  if (now >= alarm) {
 	    //bot.reply(user_data.last_message, "Sorry I missed your last alarm. I was having some problems!");
 	    addOrReplaceStorage(user_data.last_message, {pending_alarm: undefined});
-	    console.log("missed alarm");
+	    console.log("missed alarm?");
 	  } else {
 	    startWakeUpJob(user_data.last_message, alarm.toDate());
 	  }
