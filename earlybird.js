@@ -47,6 +47,7 @@ if (!SLACK_BOT) {
 
 var CronJob = require('cron').CronJob;
 var moment = require('moment-timezone');
+var Curl = require('node-libcurl').Curl;
 var Botkit = require('botkit');
 var controller;
 var bot;
@@ -54,21 +55,32 @@ var bot;
 if (SLACK_BOT) {
   controller = Botkit.slackbot({
     json_file_store: "userdata-slack",
-    retry: true, // attempt to reconnect on timeout
     debug: true
   });
 
   console.log("Creating bot...");
-  bot = controller.spawn({
-    token: process.env.slack_token
+
+  var start = function() {
+    bot = controller.spawn({
+      token: process.env.slack_token,
+      retry: true, // attempt to reconnect on timeout
+    })
+
+    bot.startRTM(function(err,bot,payload) {
+      if (err) {
+	throw new Error('Could not connect to Slack');
+      } else {
+	startUp();
+      }
+    });
+  }
+
+  start();
+
+  controller.on('rtm_close', function() {
+    console.log("rtm_close called");
+    //start();
   })
-  bot.startRTM(function(err,bot,payload) {
-    if (err) {
-      throw new Error('Could not connect to Slack');
-    } else {
-      startUp();
-    }
-  });
 } else {
   controller = Botkit.facebookbot({
     debug: true,
@@ -458,3 +470,6 @@ function startUp() {
     }
   });
 }
+
+controller.on('tick', function() {
+})
