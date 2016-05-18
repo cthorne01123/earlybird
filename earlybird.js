@@ -318,7 +318,7 @@ controller.on(messageListenEvent, function(bot, message) {
     var userName = awakeCheckUsers[userId].name;
     if (awakeCheckUsers[userId].overslept) {
       var greetingMessage = SLACK_BOT ? "hello @" + userName : "hello";
-      bot.reply(message, "Oh, " + greetingMessage + "... sleep well? A bit... too well, maybe?");
+      bot.reply(message, "Oh, " + greetingMessage + "... sleep well?");
     } else {
       var greetingMessage = SLACK_BOT ? "Great to see you're awake on time, @" + userName + "!\nWell done :)" : "Great to see you're awake on time!\nWell done :)";
       bot.reply(message, greetingMessage);
