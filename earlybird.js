@@ -294,7 +294,7 @@ function wakeUpUser(userId, userName, message) {
   console.log(message);
   
   var greetingMessage = SLACK_BOT ? "Good morning, @" + userName + "!" : "Good morning!";
-  botSay(message, greetingMessage + "\n" + getRandomComment() + "\nAre you awake?");
+  botSay(message, greetingMessage + "\n" + getRandomComment() + "\nAre you out of bed?");
   
   var check1 = moment().add(CHECK1_SECONDS, 'seconds');
 
