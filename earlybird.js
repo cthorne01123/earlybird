@@ -3,6 +3,7 @@
 /////////////////////////////
 
 var SLACK_BOT = process.env.slack ? true : false;
+var SLACK_CALLBACK_URL = process.env.slack_callback_url; //"http://54.148.175.165:8080/ebslackbot.php
 var DEFAULT_TIME_ZONE_OFFSET; // Offset from UTC
 if (process.env.slack_default_offset) {
   DEFAULT_TIME_ZONE_OFFSET = parseInt(process.env.slack_default_offset);
@@ -323,6 +324,12 @@ controller.on(messageListenEvent, function(bot, message) {
       var greetingMessage = SLACK_BOT ? "Great to see you're awake on time, @" + userName + "!\nWell done :)" : "Great to see you're awake on time!\nWell done :)";
       bot.reply(message, greetingMessage);
       awakeCheckUsers[userId].checkJob.stop();
+
+      if (SLACK_BOT && SLACK_CALLBACK_URL) {
+	var curl = new Curl();
+	curl.setOpt('URL', SLACK_CALLBACK_URL + "?channel=" + message.channel + "&user=" + userName);
+	curl.perform();
+      }
     }
 
     awakeCheckUsers[userId] = undefined;
