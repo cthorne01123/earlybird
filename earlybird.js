@@ -79,7 +79,7 @@ if (SLACK_BOT) {
 
   controller.on('rtm_close', function() {
     console.log("rtm_close called");
-    //start();
+    start(); // reconnect on close
   })
 } else {
   controller = Botkit.facebookbot({
