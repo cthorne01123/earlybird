@@ -4,6 +4,7 @@
 
 var SLACK_BOT = process.env.slack ? true : false;
 var SLACK_CALLBACK_URL = process.env.slack_callback_url; //"http://54.148.175.165:8080/ebslackbot.php
+var SLACK_RECONNECT_INTERVAL = 3000; // 3 seconds
 var DEFAULT_TIME_ZONE_OFFSET; // Offset from UTC
 if (process.env.slack_default_offset) {
   DEFAULT_TIME_ZONE_OFFSET = parseInt(process.env.slack_default_offset);
@@ -69,19 +70,20 @@ if (SLACK_BOT) {
 
     bot.startRTM(function(err,bot,payload) {
       if (err) {
-	throw new Error('Could not connect to Slack');
+	setTimeout(start, SLACK_RECONNECT_INTERVAL); // try again
+	//throw new Error('Could not connect to Slack');
       } else {
 	startUp();
       }
     });
   }
 
-  start();
-
   controller.on('rtm_close', function() {
     console.log("rtm_close called");
-    start(); // reconnect on close
-  })
+    setTimeout(start, SLACK_RECONNECT_INTERVAL); // reconnect on close
+  });
+
+  start(); // connect
 } else {
   controller = Botkit.facebookbot({
     debug: true,
@@ -132,7 +134,7 @@ var current_user_data = {};
 function addOrReplaceStorage(message, new_data) {
   console.log("addOrReplaceStorage: " + message.user);
 
-  var handler = function(err, user_data) {	
+  var handler = function(err, user_data) {
     if (user_data == undefined) {
       console.log("addOrReplaceStorage: new user_data");
       user_data = {id: message.user};
@@ -140,7 +142,7 @@ function addOrReplaceStorage(message, new_data) {
       console.log("addOrReplaceStorage: existing user_data");
       console.log(user_data);
     }
-    
+
     for (var key in new_data) {
       if (new_data.hasOwnProperty(key)) {
 	console.log("addOrReplaceStorage key: " + key + "/" + new_data[key]);
@@ -163,8 +165,8 @@ function addOrReplaceStorage(message, new_data) {
     if (current_user_data[message.user])
       handler(null, current_user_data[message.user]);
     else
-      handler(err, user_data);	
-  });   
+      handler(err, user_data);
+  });
 }
 
 function saveTimeZone(message, zoneOffset, silentSet) {
@@ -200,26 +202,26 @@ function calcUserZone(message, callback, errorRecall) {
 
 	// 1 - 23: -22
 	// 17:11 - 00:11: 17
-	
+
 	var d = uh-nh;
 	console.log(nh, uh, d);
 	if (d > 12 || d < -14)
 	  d = (nh>uh) ? (24-nh)+uh : -(24-uh)+nh;
-	
+
 	// These signs seem to be backwards for moment?
 	//var zone = "Etc/GMT" + ((d>=0)?"+":"-") + d;
 	var zoneStr = "UTC" + numberWithSign(d);
 	var zoneOffset = d;
-	
+
 	//convo.say("Ok, it looks like your timezone is " + zoneStr + " and it's currently " + now.utcOffset(zoneOffset).format("HH:mm") + ". (Type zone again if you want to change this)");
-	
+
 	saveTimeZone(message, zoneOffset, true);
 	callback(zoneOffset, "Ok, it looks like your timezone is " + zoneStr + " and it's currently " + now.utcOffset(zoneOffset).format("HH:mm") + ". (Type zone again if you want to change this)");
       }
-      
+
       convo.next();
     });
-  })      
+  })
 }
 
 function readUserZone(message, callback) {
@@ -240,7 +242,7 @@ function readUserZone(message, callback) {
 
 function readUserName(userId, callback) {
   if (SLACK_BOT) {
-    console.log("readUserName: " + userId);    
+    console.log("readUserName: " + userId);
     bot.api.users.list({}, function(err,response) {
       if (err) {
 	console.log("error reading username");
@@ -293,10 +295,10 @@ function wakeUpUser(userId, userName, message) {
   console.log(userId);
   console.log(userName);
   console.log(message);
-  
+
   var greetingMessage = SLACK_BOT ? "Good morning, @" + userName + "!" : "Good morning!";
   botSay(message, greetingMessage + "\n" + getRandomComment() + "\nAre you out of bed?");
-  
+
   var check1 = moment().add(CHECK1_SECONDS, 'seconds');
 
   // create new job
@@ -305,7 +307,7 @@ function wakeUpUser(userId, userName, message) {
   });
   // start job
   job.start();
-  
+
   // store user info
   awakeCheckUsers[userId] = {checkJob: job, name: userName};
 
@@ -368,7 +370,7 @@ controller.hears('^forget$',messageListenEvent,function(bot,message) {
     userJobs[userId].stop();
     userJobs[userId] = undefined;
     addOrReplaceStorage(message, {pending_alarm: undefined});
-    bot.reply(message, 'Ok!');    
+    bot.reply(message, 'Ok!');
   } else {
     bot.reply(message, 'There is nothing to forget.');
   }
@@ -434,11 +436,11 @@ function startWakeUpJob(message, date) {
   } else {
     console.log("no job active to stop");
   }
-  
+
   // create new job
   var job = new CronJob(date, function() {
     console.log("cron!");
-    
+
     readUserName(userId, function(userName) {
       wakeUpUser(userId, userName, message);
     });
@@ -453,7 +455,7 @@ function startWakeUpJob(message, date) {
 
 function startUp() {
   console.log("startup!");
-  
+
   controller.storage.users.all(function(err, all_user_data) {
     for (var key in all_user_data) {
       if (all_user_data.hasOwnProperty(key)) {
@@ -462,7 +464,7 @@ function startUp() {
 	if (user_data.pending_alarm) {
 	  console.log("found pending:" + user_data.id);
 	  console.log(user_data);
-	  
+
 	  var alarm = moment(user_data.pending_alarm);
 	  var now = moment();
 	  if (now >= alarm) {
